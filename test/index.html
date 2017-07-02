@@ -8,12 +8,18 @@
     <input type="text" id="connectid" placeholder="quick connect iD">
     <button onClick="fetchConnectUrl()">Resolve URL</button>
     <span id="resolvedURL"></span>
+    <img width="30" src="default.gif" class="loading-icon" style="display: none;position: relative;top: 8px;">
 
     <script>
         function fetchConnectUrl() {
             var quickConnect = new QuickConnect(document.getElementById('connectid').value);
+            document.getElementsByClassName('loading-icon')[0].style.display = "inline";
             quickConnect.determineServerURL(function(url) {
+                document.getElementsByClassName('loading-icon')[0].style.display = "none";
                 document.getElementById('resolvedURL').innerText = url;
+            }, function(error) {
+                document.getElementsByClassName('loading-icon')[0].style.display = "none";
+                document.getElementById('resolvedURL').innerText = error;
             });
         }
     </script>

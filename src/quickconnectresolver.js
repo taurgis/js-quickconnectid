@@ -8,9 +8,11 @@ var QuickConnect = function(id) {
                 createCallDSMDirectlyRequests(response[0]);
 
                 processRequestQueue(function(url) {
-                    success(url);
+                    if (success)
+                        success(url);
                 }, function(error) {
-
+                    if (fail)
+                        fail(error);
                 });
             } else {
                 if (fail)
@@ -25,7 +27,16 @@ var QuickConnect = function(id) {
 
             request.onload = function() {
                 if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
-                    success('https://' + this.ip + ':' + this.port);
+                    var responseObject = JSON.parse(this.responseText);
+                    if (responseObject.success) {
+                        for (var j = 0; j < requestQueue.length; j++) {
+                            var activeRequest = requestQueue[j];
+                            if (activeRequest !== this) {
+                                activeRequest.abort();
+                            }
+                        }
+                        success('https://' + this.ip + ':' + this.port);
+                    }
                 }
             }
 
@@ -68,8 +79,6 @@ var QuickConnect = function(id) {
 
                 if (serverInterface.ip) {
                     var pingPong = createPingPongCall(serverInterface.ip, port);
-                    pingPong.ip = serverInterface.ip
-                    pingPong.port = port;
                     requestQueue.push(pingPong);
                 }
 
@@ -78,8 +87,6 @@ var QuickConnect = function(id) {
 
                         var ipv6 = serverInterface.ipv6[i];
                         var pingPong = createPingPongCall('[' + ipv6.address + ']', port);
-                        pingPong.ip = '[' + ipv6.address + ']'
-                        pingPong.port = port;
                         requestQueue.push(pingPong);
                     }
                 }
@@ -90,6 +97,9 @@ var QuickConnect = function(id) {
 
     function createPingPongCall(ip, port) {
         var xhr = new XMLHttpRequest();
+        xhr.ip = ip
+        xhr.port = port;
+
         xhr.open('GET', 'https://' + ip + ":" + port + "/webman/pingpong.cgi?action=cors", true);
 
         return xhr;
