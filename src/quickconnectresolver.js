@@ -7,12 +7,7 @@ var QuickConnect = function(id) {
             if (response[0].server && response[0].service) {
                 createTunnelRequests(response[0], function(tunnelResponse) {
                     if (tunnelResponse) {
-                        var tunnelRelayIp = tunnelResponse.service.relay_ip;
-                        var tunnelRelayPort = tunnelResponse.service.relay_port;
-                        if (tunnelRelayIp) {
-                            var pingPong = createPingPongCall(tunnelRelayIp, tunnelRelayPort);
-                            requestQueue.push(pingPong);
-                        }
+                        createCallRelayRequests(tunnelResponse);
                     }
 
                     createCallDSMDirectlyRequests(response[0]);
