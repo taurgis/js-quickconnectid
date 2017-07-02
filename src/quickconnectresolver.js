@@ -19,14 +19,14 @@ var QuickConnect = function(id) {
                     fail("No server found");
             }
         });
-    };
+    }
 
     function processRequestQueue(success, error) {
         for (var i = 0; i < requestQueue.length; i++) {
             var request = requestQueue[i];
 
             request.onload = function() {
-                if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
+                if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
                     var responseObject = JSON.parse(this.responseText);
                     if (responseObject.success) {
                         for (var j = 0; j < requestQueue.length; j++) {
@@ -58,7 +58,7 @@ var QuickConnect = function(id) {
         xhr.open('POST', 'https://synologyquickconnectid.herokuapp.com/server.php', true);
 
         xhr.onload = function() {
-            if (xhr.readyState == XMLHttpRequest.DONE && xhr.status == 200) {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 var serversResponse = JSON.parse(xhr.responseText);
                 done(serversResponse);
             }
