@@ -86,8 +86,8 @@ var QuickConnect = function(id) {
                     for (var j = 0; j < serverInterface.ipv6.length; j++) {
 
                         var ipv6 = serverInterface.ipv6[i];
-                        var pingPong = createPingPongCall('[' + ipv6.address + ']', port);
-                        requestQueue.push(pingPong);
+                        var ipv6PingPong = createPingPongCall('[' + ipv6.address + ']', port);
+                        requestQueue.push(ipv6PingPong);
                     }
                 }
 
