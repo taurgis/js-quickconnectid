@@ -5,15 +5,25 @@ var QuickConnect = function(id) {
     function determineServerURL(success, fail) {
         getServerData(function(response) {
             if (response[0].server && response[0].service) {
-                createCallDSMDirectlyRequests(response[0]);
-                createCallRelayRequests(response[0]);
+                createTunnelRequests(response[0], function(tunnelResponse) {
+                    var relayIp = tunnelResponse.service.relay_ip;
+                    var relayPort = tunnelResponse.service.relay_port;
+                    if (relayIp) {
+                        var pingPong = createPingPongCall(relayIp, relayPort);
+                        requestQueue.push(pingPong);
+                    }
 
-                processRequestQueue(function(url) {
-                    if (success)
-                        success(url);
-                }, function(error) {
-                    if (fail)
-                        fail(error);
+                    createCallDSMDirectlyRequests(response[0]);
+                    createCallRelayRequests(response[0]);
+
+
+                    processRequestQueue(function(url) {
+                        if (success)
+                            success(url);
+                    }, function(error) {
+                        if (fail)
+                            fail(error);
+                    });
                 });
             } else {
                 if (fail)
@@ -68,6 +78,31 @@ var QuickConnect = function(id) {
         xhr.send(JSON.stringify(serverRequestData));
 
         return xhr;
+    }
+
+    function createTunnelRequests(serverData, done, fail) {
+        if (serverData.env.control_host) {
+            var serverRequestData = {
+                "command": "request_tunnel",
+                "version": 1,
+                "serverID": quickConnectID,
+                "id": "dsm_portal_https"
+            }
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', "https://synologyquickconnectid.herokuapp.com/server.php?host=" + serverData.env.control_host, true);
+
+            xhr.onload = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                    var serversResponse = JSON.parse(xhr.responseText);
+                    done(serversResponse);
+                } else {
+                    fail();
+                }
+            };
+
+            xhr.send(JSON.stringify(serverRequestData));
+        }
     }
 
     function createCallRelayRequests(serverData) {
