@@ -6,6 +6,7 @@ var QuickConnect = function(id) {
         getServerData(function(response) {
             if (response[0].server && response[0].service) {
                 createCallDSMDirectlyRequests(response[0]);
+                createCallRelayRequests(response[0]);
 
                 processRequestQueue(function(url) {
                     if (success)
@@ -67,6 +68,16 @@ var QuickConnect = function(id) {
         xhr.send(JSON.stringify(serverRequestData));
 
         return xhr;
+    }
+
+    function createCallRelayRequests(serverData) {
+        var relayIp = serverData.service.relay_ip;
+        var relayPort = serverData.service.relay_port;
+
+        if (relayIp) {
+            var pingPong = createPingPongCall(relayIp, relayPort);
+            requestQueue.push(pingPong);
+        }
     }
 
     function createCallDSMDirectlyRequests(serverData) {
