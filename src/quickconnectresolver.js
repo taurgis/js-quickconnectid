@@ -6,11 +6,13 @@ var QuickConnect = function(id) {
         getServerData(function(response) {
             if (response[0].server && response[0].service) {
                 createTunnelRequests(response[0], function(tunnelResponse) {
-                    var relayIp = tunnelResponse.service.relay_ip;
-                    var relayPort = tunnelResponse.service.relay_port;
-                    if (relayIp) {
-                        var pingPong = createPingPongCall(relayIp, relayPort);
-                        requestQueue.push(pingPong);
+                    if (tunnelResponse) {
+                        var relayIp = tunnelResponse.service.relay_ip;
+                        var relayPort = tunnelResponse.service.relay_port;
+                        if (relayIp) {
+                            var pingPong = createPingPongCall(relayIp, relayPort);
+                            requestQueue.push(pingPong);
+                        }
                     }
 
                     createCallDSMDirectlyRequests(response[0]);
@@ -102,6 +104,8 @@ var QuickConnect = function(id) {
             };
 
             xhr.send(JSON.stringify(serverRequestData));
+        } else {
+            done();
         }
     }
 
