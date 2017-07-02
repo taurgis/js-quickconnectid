@@ -7,10 +7,10 @@ var QuickConnect = function(id) {
             if (response[0].server && response[0].service) {
                 createTunnelRequests(response[0], function(tunnelResponse) {
                     if (tunnelResponse) {
-                        var relayIp = tunnelResponse.service.relay_ip;
-                        var relayPort = tunnelResponse.service.relay_port;
-                        if (relayIp) {
-                            var pingPong = createPingPongCall(relayIp, relayPort);
+                        var tunnelRelayIp = tunnelResponse.service.relay_ip;
+                        var tunnelRelayPort = tunnelResponse.service.relay_port;
+                        if (tunnelRelayIp) {
+                            var pingPong = createPingPongCall(tunnelRelayIp, tunnelRelayPort);
                             requestQueue.push(pingPong);
                         }
                     }
