@@ -7,7 +7,6 @@ var QuickConnect = function(id) {
             if (response[0].server && response[0].service) {
                 createCallDSMDirectlyRequests(response[0]);
 
-
                 processRequestQueue(function(url) {
                     success(url);
                 }, function(error) {
@@ -23,16 +22,14 @@ var QuickConnect = function(id) {
     function processRequestQueue(success, error) {
         for (var i = 0; i < requestQueue.length; i++) {
             var request = requestQueue[i];
-            request.xhr.ip = request.ip
-            request.xhr.port = request.port;
-            request.xhr.onload = function() {
+
+            request.onload = function() {
                 if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
                     success('https://' + this.ip + ':' + this.port);
                 }
             }
 
-            request.xhr.send(null);
-
+            request.send(null);
         }
     }
 
@@ -71,11 +68,9 @@ var QuickConnect = function(id) {
 
                 if (serverInterface.ip) {
                     var pingPong = createPingPongCall(serverInterface.ip, port);
-                    requestQueue.push({
-                        xhr: pingPong,
-                        ip: serverInterface.ip,
-                        port: port
-                    });
+                    pingPong.ip = serverInterface.ip
+                    pingPong.port = port;
+                    requestQueue.push(pingPong);
                 }
 
                 if (serverInterface.ipv6 && serverInterface.ipv6.length > 0) {
@@ -83,11 +78,9 @@ var QuickConnect = function(id) {
 
                         var ipv6 = serverInterface.ipv6[i];
                         var pingPong = createPingPongCall('[' + ipv6.address + ']', port);
-                        requestQueue.push({
-                            xhr: pingPong,
-                            ip: '[' + ipv6.address + ']',
-                            port: port
-                        });
+                        pingPong.ip = '[' + ipv6.address + ']'
+                        pingPong.port = port;
+                        requestQueue.push(pingPong);
                     }
                 }
 
