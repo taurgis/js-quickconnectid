@@ -1,0 +1,22 @@
+<html>
+
+<head>
+    <script src="../src/quickconnectresolver.js"></script>
+</head>
+
+<body>
+    <input type="text" id="connectid" placeholder="quick connect iD">
+    <button onClick="fetchConnectUrl()">Resolve URL</button>
+    <span id="resolvedURL"></span>
+
+    <script>
+        function fetchConnectUrl() {
+            var quickConnect = new QuickConnect(document.getElementById('connectid').value);
+            quickConnect.determineServerURL(function(url) {
+                document.getElementById('resolvedURL').innerText = url;
+            });
+        }
+    </script>
+</body>
+
+</html>
