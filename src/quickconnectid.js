@@ -1,3 +1,13 @@
+/*
+ * js-quickconnectid v0.1 (https://github.com/taurgis/js-quickconnectid)
+ *
+ * Copyright 2017, Thomas Theunen
+ * https://www.thomastheunen.eu
+ *
+ * Licensed under the MIT license:
+ * http://www.opensource.org/licenses/MIT
+ */
+
 var QuickConnect = function(id) {
   var quickConnectID = id;
   var requestQueue = [];
