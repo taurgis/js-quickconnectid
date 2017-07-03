@@ -96,7 +96,7 @@ var QuickConnect = function(id) {
     return xhr;
   }
 
-  function createTunnelRequests(serverData, done, fail) {
+  function createTunnelRequests(serverData, done) {
     if (serverData.env.control_host) {
       var serverRequestData = {
         "command": "request_tunnel",
@@ -113,7 +113,7 @@ var QuickConnect = function(id) {
           var serversResponse = JSON.parse(xhr.responseText);
           done(serversResponse);
         } else {
-          fail();
+          done();
         }
       };
 
