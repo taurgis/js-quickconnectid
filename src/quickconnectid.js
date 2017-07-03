@@ -40,6 +40,8 @@ var QuickConnect = function(id) {
   }
 
   function processRequestQueue(success, error) {
+    var errorCount = 0;
+    var errorMsg = "<br/><br /><b>Attempted following locations:</b> <br />";
     for (var i = 0; i < requestQueue.length; i++) {
       var request = requestQueue[i];
 
@@ -55,6 +57,14 @@ var QuickConnect = function(id) {
             }
             success('https://' + this.ip + ':' + this.port);
           }
+        }
+      }
+
+      request.onerror = function(e) {
+        errorMsg += "  - " + e.target.ip + ":" + e.target.port + "<br />";
+        if (++errorCount === requestQueue.length) {
+          if (error)
+            error('No server found.' + errorMsg + "<br /> Possible solution is to visit the locations manually to allow https over IP addresses. (ssl certificate error)");
         }
       }
 
@@ -111,6 +121,7 @@ var QuickConnect = function(id) {
       xhr.onload = function() {
         if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
           var serversResponse = JSON.parse(xhr.responseText);
+
           done(serversResponse);
         } else {
           done();
@@ -132,13 +143,8 @@ var QuickConnect = function(id) {
       var pingPong = createPingPongCall(relayIp, relayPort);
       requestQueue.push(pingPong);
     }
-
-    // This only works if you do not have to worry about CORS.
-    if (relayRegion) {
-      var pingPong = createPingPongCall(quickConnectID + "." + relayRegion + ".quickconnect.to");
-      requestQueue.push(pingPong);
-    }
   }
+
 
   function createCallDSMDirectlyRequests(serverData) {
     var port = serverData.service.port;
