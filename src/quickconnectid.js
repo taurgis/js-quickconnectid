@@ -61,7 +61,7 @@ var QuickConnect = function(id) {
       }
 
       request.onerror = function(e) {
-        errorMsg += "  - " + e.target.ip + ":" + e.target.port + "<br />";
+        errorMsg += '  - <a target="_blank" href="https://' + e.target.ip + ':' + e.target.port + '">https://' + e.target.ip + ":" + e.target.port + '</a><br />';
         if (++errorCount === requestQueue.length) {
           if (error)
             error('No server found.' + errorMsg + "<br /> Possible solution is to visit the locations manually to allow https over IP addresses. (ssl certificate error)");
