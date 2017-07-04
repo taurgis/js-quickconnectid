@@ -1,5 +1,5 @@
 /*
- * js-quickconnectid v0.1 (https://github.com/taurgis/js-quickconnectid)
+ * js-quickconnectid v0.2 (https://github.com/taurgis/js-quickconnectid)
  *
  * Copyright 2017, Thomas Theunen
  * https://www.thomastheunen.eu
@@ -8,9 +8,10 @@
  * http://www.opensource.org/licenses/MIT
  */
 
-var QuickConnect = function(id) {
+var QuickConnect = function(id, enableCORS) {
   var quickConnectID = id;
   var requestQueue = [];
+  var useCORS = enableCORS;
 
   function determineServerURL(success, fail) {
     getServerData(function(response) {
@@ -23,7 +24,6 @@ var QuickConnect = function(id) {
           createCallDSMDirectlyRequests(response[0]);
           createCallRelayRequests(response[0]);
 
-
           processRequestQueue(function(url) {
             if (success)
               success(url);
@@ -34,8 +34,10 @@ var QuickConnect = function(id) {
         });
       } else {
         if (fail)
-          fail("No server found");
+          fail('No server found');
       }
+    }, function() {
+      fail('No server found ')
     });
   }
 
@@ -72,7 +74,7 @@ var QuickConnect = function(id) {
     }
   }
 
-  function getServerData(done) {
+  function getServerData(success, error) {
     var serverRequestData = [{
         "version": 1,
         "command": "get_server_info",
@@ -91,22 +93,41 @@ var QuickConnect = function(id) {
       }
     ];
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://synologyquickconnectid.herokuapp.com/server.php', true);
+    var globalXhr = new XMLHttpRequest();
+    globalXhr.open('POST', 'https://global.quickconnect.to/Serv.php', true);
 
-    xhr.onload = function() {
-      if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-        var serversResponse = JSON.parse(xhr.responseText);
-        done(serversResponse);
+    globalXhr.onload = function() {
+      if (globalXhr.readyState === XMLHttpRequest.DONE && globalXhr.status === 200) {
+        var serversResponse = JSON.parse(globalXhr.responseText);
+        success(serversResponse);
       }
-    };
+    }
 
-    xhr.send(JSON.stringify(serverRequestData));
+    if (useCORS) {
+      globalXhr.onerror = function() {
+        // This is a backup node.JS server hosted on heroku that acts as a proxy to enable CORS requests
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://synologyquickconnectid.herokuapp.com/server.php', true);
 
-    return xhr;
+        xhr.onload = function() {
+          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            var serversResponse = JSON.parse(xhr.responseText);
+            success(serversResponse);
+          }
+        };
+
+        xhr.send(JSON.stringify(serverRequestData));
+      }
+    } else {
+      globalXhr.onerror = function() {
+        if (error)
+          error("CORS error");
+      }
+    }
+    globalXhr.send(JSON.stringify(serverRequestData));
   }
 
-  function createTunnelRequests(serverData, done) {
+  function createTunnelRequests(serverData, success, error) {
     if (serverData.env.control_host) {
       var serverRequestData = {
         "command": "request_tunnel",
@@ -115,22 +136,45 @@ var QuickConnect = function(id) {
         "id": "dsm_portal_https"
       }
 
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', "https://synologyquickconnectid.herokuapp.com/server.php?host=" + serverData.env.control_host, true);
+      var globalXhr = new XMLHttpRequest();
+      globalXhr.open('POST', 'https://' + serverData.env.control_host + '/Serv.php', true);
 
-      xhr.onload = function() {
-        if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          var serversResponse = JSON.parse(xhr.responseText);
+      globalXhr.onload = function() {
+        if (globalXhr.readyState === XMLHttpRequest.DONE && globalXhr.status === 200) {
+          var serversResponse = JSON.parse(globalXhr.responseText);
 
-          done(serversResponse);
+          success(serversResponse);
         } else {
-          done();
+          success();
         }
       };
 
-      xhr.send(JSON.stringify(serverRequestData));
+      if (useCORS) {
+        globalXhr.onerror = function() {
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', "https://synologyquickconnectid.herokuapp.com/server.php?host=" + serverData.env.control_host, true);
+
+          xhr.onload = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+              var serversResponse = JSON.parse(xhr.responseText);
+
+              success(serversResponse);
+            } else {
+              success();
+            }
+          };
+
+          xhr.send(JSON.stringify(serverRequestData));
+        }
+      } else {
+        globalXhr.onerror = function() {
+          if (error)
+            error("CORS error");
+        }
+      }
+      globalXhr.send(JSON.stringify(serverRequestData));
     } else {
-      done();
+      success();
     }
   }
 
@@ -161,9 +205,9 @@ var QuickConnect = function(id) {
 
         if (serverInterface.ipv6 && serverInterface.ipv6.length > 0) {
           for (var j = 0; j < serverInterface.ipv6.length; j++) {
-
             var ipv6 = serverInterface.ipv6[i];
             var ipv6PingPong = createPingPongCall('[' + ipv6.address + ']', port);
+            
             requestQueue.push(ipv6PingPong);
           }
         }
